@@ -4,10 +4,21 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<DatabaseContext>(opt => opt.UseInMemoryDatabase("UsersDb"));
+builder.Services.AddDbContext<DatabaseContext>(opt =>
+{
+    var connectionString = "Host=localhost;Port=5432;Database=UsersDb;User Id=postgres;Password=admin;";
+    opt.UseNpgsql(connectionString);
+});
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var databaseContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+    databaseContext.Database.EnsureCreated();
+}
 
 app.MapGet("/users", async (DatabaseContext db) =>
 {
